@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"sync"
-    "strings"
 	"time"
-    "path/filepath"
 )
 
 const (
-	FilenameSuffixInDay = "20060102"
-	FilenameSuffixInHour = "2006010215"
+	FilenameSuffixInDay    = "20060102"
+	FilenameSuffixInHour   = "2006010215"
 	FilenameSuffixInMinute = "200601021504"
 	FilenameSuffixInSecond = "20060102150405"
-	StandardLogPrefix = "2006/01/02 15:04:05"
+	StandardLogPrefix      = "2006/01/02 15:04:05"
 )
 
 const (
@@ -48,21 +48,21 @@ func NewLogger(filenamePrefix string, filenameSuffixFormat string) *Logger {
 	l := &Logger{
 		filenamePrefix:        filenamePrefix,
 		filenameSuffixFormat:  filenameSuffixFormat,
-		currentFilenameSuffix: "",
+		currentFilenameSuffix: time.Now().Format(filenameSuffixFormat),
 	}
-    return l
+	return l
 }
 
 func (l *Logger) updateInnerLogger(now time.Time) {
 	filenameSuffix := now.Format(l.filenameSuffixFormat)
-	if filenameSuffix != l.currentFilenameSuffix {
-        if l.fileWriter != nil && l.fileWriter != os.Stdout {
-		    l.fileWriter.Close()
-        }
-        os.Rename(l.filenamePrefix, fmt.Sprintf("%s.%s", l.filenamePrefix, l.currentFilenameSuffix))
+	if filenameSuffix != l.currentFilenameSuffix || l.fileWriter == nil {
+		if l.fileWriter != nil && l.fileWriter != os.Stdout {
+			l.fileWriter.Close()
+		    os.Rename(l.filenamePrefix, fmt.Sprintf("%s.%s", l.filenamePrefix, l.currentFilenameSuffix))
+		}
 		if l.fileWriter = l.getFileWriter(l.filenamePrefix); l.fileWriter == os.Stdout {
-            fmt.Fprintf(os.Stderr, "log4g init with prefix:%s failed, log to stdout\n", l.filenamePrefix)
-        }
+			fmt.Fprintf(os.Stderr, "log4g init with prefix:%s failed, log to stdout\n", l.filenamePrefix)
+		}
 		l.currentFilenameSuffix = filenameSuffix
 	}
 }
@@ -116,19 +116,19 @@ func (l *Logger) Debugf(format string, content ...interface{}) {
 }
 
 func (l *Logger) checkAndMkdir(filenamePrefix string) error {
-    sep := string(filepath.Separator)
-    if strings.Contains(filenamePrefix, sep) {
-        lastIdx := strings.LastIndex(filenamePrefix, sep)
-        logPath := filenamePrefix[:lastIdx + 1]
-        return os.MkdirAll(logPath, 0755)
-    }
-    return nil
+	sep := string(filepath.Separator)
+	if strings.Contains(filenamePrefix, sep) {
+		lastIdx := strings.LastIndex(filenamePrefix, sep)
+		logPath := filenamePrefix[:lastIdx+1]
+		return os.MkdirAll(logPath, 0755)
+	}
+	return nil
 }
 
 func (l *Logger) getFileWriter(filenamePrefix string) io.WriteCloser {
-    if err := l.checkAndMkdir(filenamePrefix); err != nil {
-        return os.Stdout
-    }
+	if err := l.checkAndMkdir(filenamePrefix); err != nil {
+		return os.Stdout
+	}
 	fileWriter, err := os.OpenFile(fmt.Sprintf("%s", filenamePrefix), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
