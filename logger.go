@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -58,7 +59,7 @@ func (l *Logger) updateInnerLogger(now time.Time) {
 	if filenameSuffix != l.currentFilenameSuffix || l.fileWriter == nil {
 		if l.fileWriter != nil && l.fileWriter != os.Stdout {
 			l.fileWriter.Close()
-		    os.Rename(l.filenamePrefix, fmt.Sprintf("%s.%s", l.filenamePrefix, l.currentFilenameSuffix))
+			os.Rename(l.filenamePrefix, fmt.Sprintf("%s.%s", l.filenamePrefix, l.currentFilenameSuffix))
 		}
 		if l.fileWriter = l.getFileWriter(l.filenamePrefix); l.fileWriter == os.Stdout {
 			fmt.Fprintf(os.Stderr, "log4g init with prefix:%s failed, log to stdout\n", l.filenamePrefix)
@@ -73,11 +74,14 @@ func (l *Logger) write(level int, format string, content ...interface{}) {
 	defer l.Unlock()
 	l.updateInnerLogger(now)
 
+	pc, _, _, _ := runtime.Caller(2)
+	fn := runtime.FuncForPC(pc)
+
 	var s string
 	if format == "" {
-		s = fmt.Sprintf("%s [%s] %s\n", now.Format(StandardLogPrefix), logPrefix[level], fmt.Sprint(content...))
+		s = fmt.Sprintf("%s [%s] %s %s\n", now.Format(StandardLogPrefix), logPrefix[level], fn.Name(), fmt.Sprint(content...))
 	} else {
-		s = fmt.Sprintf("%s [%s] %s\n", now.Format(StandardLogPrefix), logPrefix[level], fmt.Sprintf(format, content...))
+		s = fmt.Sprintf("%s [%s] %s %s\n", now.Format(StandardLogPrefix), logPrefix[level], fn.Name(), fmt.Sprintf(format, content...))
 	}
 
 	l.fileWriter.Write([]byte(s))
