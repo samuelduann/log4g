@@ -119,6 +119,14 @@ func (l *Logger) Debugf(format string, content ...interface{}) {
 	l.write(debugLevel, format, content...)
 }
 
+func (l *Logger) Error(content ...interface{}) {
+	l.write(errorLevel, "", content...)
+}
+
+func (l *Logger) Errorf(format string, content ...interface{}) {
+	l.write(errorLevel, format, content...)
+}
+
 func (l *Logger) checkAndMkdir(filenamePrefix string) error {
 	sep := string(filepath.Separator)
 	if strings.Contains(filenamePrefix, sep) {
