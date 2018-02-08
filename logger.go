@@ -51,6 +51,14 @@ func NewLogger(filenamePrefix string, filenameSuffixFormat string) *Logger {
 		filenameSuffixFormat:  filenameSuffixFormat,
 		currentFilenameSuffix: time.Now().Format(filenameSuffixFormat),
 	}
+
+    // in case of process restart, try to read the `filenamePrefix` file and get
+    // its utime, which will be used as l.currentFilenameSuffix
+    fileInfo, err := os.Stat(l.filenamePrefix)
+    if err == nil {
+        l.currentFilenameSuffix = fileInfo.ModTime().Format(l.filenameSuffixFormat)
+    }
+
 	return l
 }
 
