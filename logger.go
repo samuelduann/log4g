@@ -59,19 +59,19 @@ func NewLogger(filenamePrefix string, filenameSuffixFormat string) *Logger {
         l.currentFilenameSuffix = fileInfo.ModTime().Format(l.filenameSuffixFormat)
     }
 
+    l.fileWriter = l.getFileWriter(l.filenamePrefix)
+
 	return l
 }
 
 func (l *Logger) updateInnerLogger(now time.Time) {
 	filenameSuffix := now.Format(l.filenameSuffixFormat)
-	if filenameSuffix != l.currentFilenameSuffix || l.fileWriter == nil {
+	if filenameSuffix != l.currentFilenameSuffix {
 		if l.fileWriter != nil && l.fileWriter != os.Stdout {
 			l.fileWriter.Close()
 			os.Rename(l.filenamePrefix, fmt.Sprintf("%s.%s", l.filenamePrefix, l.currentFilenameSuffix))
 		}
-		if l.fileWriter = l.getFileWriter(l.filenamePrefix); l.fileWriter == os.Stdout {
-			fmt.Fprintf(os.Stderr, "log4g init with prefix:%s failed, log to stdout\n", l.filenamePrefix)
-		}
+		l.fileWriter = l.getFileWriter(l.filenamePrefix)
 		l.currentFilenameSuffix = filenameSuffix
 	}
 }
@@ -147,6 +147,7 @@ func (l *Logger) checkAndMkdir(filenamePrefix string) error {
 
 func (l *Logger) getFileWriter(filenamePrefix string) io.WriteCloser {
 	if err := l.checkAndMkdir(filenamePrefix); err != nil {
+		fmt.Fprintf(os.Stderr, "log4g init with prefix:%s err:%s, log to stdout\n", filenamePrefix, err)
 		return os.Stdout
 	}
 	fileWriter, err := os.OpenFile(fmt.Sprintf("%s", filenamePrefix), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
