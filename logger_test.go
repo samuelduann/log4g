@@ -9,7 +9,7 @@ import (
 func Test_Noticef(t *testing.T) {
 	logger := NewLogger("test_log/test_log", FilenameSuffixInSecond)
 	for i := 0; i < 5; i++ {
-		logger.Notice("test")
+		logger.Noticef("test %d", i)
 		time.Sleep(100 * time.Millisecond)
 	}
 }

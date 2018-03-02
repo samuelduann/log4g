@@ -87,9 +87,9 @@ func (l *Logger) write(level int, format string, content ...interface{}) {
 
 	var s string
 	if format == "" {
-		s = fmt.Sprintf("%s [%s] %s %s\n", now.Format(StandardLogPrefix), logPrefix[level], fn.Name(), fmt.Sprint(content...))
+		s = fmt.Sprintf("%s\t[%s]\t%s\t%s\n", now.Format(StandardLogPrefix), logPrefix[level], fn.Name(), fmt.Sprint(content...))
 	} else {
-		s = fmt.Sprintf("%s [%s] %s %s\n", now.Format(StandardLogPrefix), logPrefix[level], fn.Name(), fmt.Sprintf(format, content...))
+		s = fmt.Sprintf("%s\t[%s]\t%s\t%s\n", now.Format(StandardLogPrefix), logPrefix[level], fn.Name(), fmt.Sprintf(format, content...))
 	}
 
 	l.fileWriter.Write([]byte(s))
