@@ -2,7 +2,6 @@ package log4g
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -42,7 +41,7 @@ type Logger struct {
 	filenamePrefix        string
 	filenameSuffixFormat  string
 	currentFilenameSuffix string
-	fileWriter            io.WriteCloser
+	fileWriter            *os.File
 }
 
 func NewLogger(filenamePrefix string, filenameSuffixFormat string) *Logger {
@@ -93,6 +92,7 @@ func (l *Logger) write(level int, format string, content ...interface{}) {
 	}
 
 	l.fileWriter.Write([]byte(s))
+    l.fileWriter.Sync()
 }
 
 func (l *Logger) Info(content ...interface{}) {
@@ -145,7 +145,7 @@ func (l *Logger) checkAndMkdir(filenamePrefix string) error {
 	return nil
 }
 
-func (l *Logger) getFileWriter(filenamePrefix string) io.WriteCloser {
+func (l *Logger) getFileWriter(filenamePrefix string) *os.File {
 	if err := l.checkAndMkdir(filenamePrefix); err != nil {
 		fmt.Fprintf(os.Stderr, "log4g init with prefix:%s err:%s, log to stdout\n", filenamePrefix, err)
 		return os.Stdout
